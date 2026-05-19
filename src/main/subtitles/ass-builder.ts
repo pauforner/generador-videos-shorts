@@ -14,9 +14,9 @@ export function fontSizeFor(size: SubtitleSize): number {
 
 export function yPositionFor(position: SubtitlePosition): number {
   switch (position) {
+    case 'upper-third': return Math.round(VIDEO_H * 0.33)
     case 'center': return Math.round(VIDEO_H * 0.5)
     case 'lower-third': return Math.round(VIDEO_H * 0.66)
-    case 'bottom': return Math.round(VIDEO_H * 0.85)
   }
 }
 

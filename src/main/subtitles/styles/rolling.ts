@@ -13,6 +13,9 @@ export function rollingStyle(scenes: Scene[], settings: SubtitleSettings): strin
 
   for (let i = 0; i < allWords.length; i++) {
     const center = allWords[i]
+    const next = allWords[i + 1]
+    const start = center.start
+    const end = next ? next.start : center.end
     const windowStart = Math.max(0, i - Math.floor(WINDOW / 2))
     const windowEnd = Math.min(allWords.length, windowStart + WINDOW)
     const window = allWords.slice(windowStart, windowEnd)
@@ -28,7 +31,7 @@ export function rollingStyle(scenes: Scene[], settings: SubtitleSettings): strin
 
     const intro = `{\\pos(${x},${yPos})\\an5\\bord5\\3c&H000000&}`
     lines.push(
-      `Dialogue: 0,${assTime(center.start)},${assTime(center.end)},Default,,0,0,0,,${intro}${text}`
+      `Dialogue: 0,${assTime(start)},${assTime(end)},Default,,0,0,0,,${intro}${text}`
     )
   }
 

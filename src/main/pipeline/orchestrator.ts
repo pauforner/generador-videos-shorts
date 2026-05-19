@@ -49,6 +49,14 @@ export async function generateVideo(
     onProgress({ phase: 'aligning', message: 'Alineando escenas con audio…', percent: 35 })
     const aligned = alignScenes(analyzed, tts.words)
     if (aligned.length === 0) throw new Error('No se pudieron alinear escenas con timestamps')
+    const last = aligned[aligned.length - 1]
+    if (tts.durationSeconds > last.end) {
+      aligned[aligned.length - 1] = {
+        ...last,
+        end: tts.durationSeconds,
+        duration: tts.durationSeconds - last.start
+      }
+    }
     const scenes = applyClipLength(aligned, request.clipLength)
 
     onProgress({ phase: 'fetching', message: 'Descargando b-rolls…', percent: 40 })

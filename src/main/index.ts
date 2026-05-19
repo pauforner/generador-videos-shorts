@@ -1,9 +1,17 @@
-import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, shell, protocol, net } from 'electron'
 import { join } from 'path'
+import { pathToFileURL } from 'url'
 import { getConfig, setConfig, isConfigured } from './store'
 import { generateVideo } from './pipeline/orchestrator'
 import { listVoices, ttsSample } from './api/elevenlabs'
 import type { AppConfig, GenerateRequest, VoiceSettings } from '../shared/types'
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'media',
+    privileges: { secure: true, supportFetchAPI: true, stream: true, bypassCSP: true }
+  }
+])
 
 let mainWindow: BrowserWindow | null = null
 
@@ -31,6 +39,11 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  protocol.handle('media', (req) => {
+    const url = new URL(req.url)
+    const filePath = decodeURIComponent(url.pathname.replace(/^\//, ''))
+    return net.fetch(pathToFileURL(filePath).toString())
+  })
   registerIpc()
   createWindow()
   app.on('activate', () => {

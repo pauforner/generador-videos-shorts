@@ -13,11 +13,11 @@ export default function SubtitlePreview({ settings }: { settings: SubtitleSettin
         className="absolute left-1/2 -translate-x-1/2 w-[80%] text-center"
         style={{
           top:
-            settings.position === 'center'
-              ? '50%'
-              : settings.position === 'lower-third'
-                ? '66%'
-                : '85%',
+            settings.position === 'upper-third'
+              ? '33%'
+              : settings.position === 'center'
+                ? '50%'
+                : '66%',
           transform: 'translate(-50%, -50%)',
           fontFamily:
             settings.font === 'Anton'

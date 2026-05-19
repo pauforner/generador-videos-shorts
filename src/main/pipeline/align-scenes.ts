@@ -58,5 +58,31 @@ export function alignScenes(analyzed: AnalyzedScene[], words: Word[]): Scene[] {
     })
   }
 
+  if (wordIdx < words.length) {
+    const remaining = words.slice(wordIdx)
+    if (scenes.length > 0) {
+      const last = scenes[scenes.length - 1]
+      const mergedWords = [...last.words, ...remaining]
+      const newEnd = remaining[remaining.length - 1].end
+      scenes[scenes.length - 1] = {
+        ...last,
+        words: mergedWords,
+        end: newEnd,
+        duration: Math.max(0.5, newEnd - last.start)
+      }
+    } else {
+      const start = remaining[0].start
+      const end = remaining[remaining.length - 1].end
+      scenes.push({
+        text: remaining.map((w) => w.text).join(' '),
+        keywordsEn: ['lifestyle'],
+        start,
+        end,
+        duration: Math.max(0.5, end - start),
+        words: remaining
+      })
+    }
+  }
+
   return scenes
 }

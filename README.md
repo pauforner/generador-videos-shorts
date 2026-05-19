@@ -4,7 +4,7 @@
 
 # Generador de Vídeos Verticales 9:16
 
-Herramienta de escritorio (Mac + Windows) para convertir guiones en vídeos verticales 9:16 listos para redes sociales (Reels, TikTok, Shorts). Creada por **[Pau Forner Navarro](https://metodoinicia.com)** para los alumnos de **[Inicia](https://metodoinicia.com)**.
+Herramienta de escritorio (Mac + Windows) para convertir guiones en vídeos verticales 9:16 listos para redes sociales (Reels, TikTok, Shorts). Creada por **Pau Forner** para **[metodoinicia.com](https://metodoinicia.com)** y **[metadigitales.com](https://metadigitales.com)**.
 
 ---
 
@@ -111,6 +111,6 @@ Como tienes el proyecto abierto en Claude Code, pídele lo que quieras: cambiar 
 
 ## Créditos
 
-Creado por **[Pau Forner Navarro](https://metodoinicia.com)** · [metodoinicia.com](https://metodoinicia.com)
+Creado por Pau Forner para [metodoinicia.com](https://metodoinicia.com) y [metadigitales.com](https://metadigitales.com).
 
 Licencia: [MIT](./LICENSE)

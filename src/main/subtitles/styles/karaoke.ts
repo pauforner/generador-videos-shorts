@@ -15,9 +15,10 @@ export function karaokeStyle(scenes: Scene[], settings: SubtitleSettings): strin
       const group = scene.words.slice(i, i + WORDS_PER_LINE)
       if (group.length === 0) continue
 
+      const groupEnd = group[group.length - 1].end
       for (let j = 0; j < group.length; j++) {
         const start = group[j].start
-        const end = group[j].end
+        const end = j + 1 < group.length ? group[j + 1].start : groupEnd
         const text = renderLine(group, j, primary, highlight)
         const intro = `{\\pos(${x},${yPos})\\an5\\bord4\\3c&H000000&}`
         lines.push(

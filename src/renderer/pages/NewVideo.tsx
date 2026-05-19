@@ -430,9 +430,9 @@ export default function NewVideo({
                       setSubs({ ...subs, position: e.target.value as never })
                     }
                   >
+                    <option value="upper-third">Tercio superior</option>
                     <option value="center">Centro</option>
                     <option value="lower-third">Tercio inferior</option>
-                    <option value="bottom">Abajo</option>
                   </select>
                 </div>
               </div>

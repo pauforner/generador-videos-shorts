@@ -12,6 +12,8 @@ const SYSTEM_PROMPT = `You split a video script into scenes for a vertical 9:16 
 Rules:
 - Each scene is one short visual idea (typically 1 sentence, 5-15 words). Long sentences may be split at natural breaks.
 - Keep the original wording exactly. Never paraphrase, translate, summarize, or change punctuation/casing of the text.
+- Every single word from the original script MUST appear in exactly one scene. Do not drop, merge, deduplicate or reorder any text — even if a sentence is repeated word-for-word, keep both copies in order.
+- The concatenation of all scene "text" fields, separated by single spaces, MUST be lexically equivalent to the input script (ignoring leading/trailing whitespace).
 - For each scene return 3 short visual keywords in English (single nouns or 2-word phrases) that describe what should be shown on screen. Concrete and searchable on stock-video sites. Avoid abstract concepts.
 
 Return ONLY valid JSON with this shape:

@@ -8,11 +8,15 @@ export function singleXxlStyle(scenes: Scene[], settings: SubtitleSettings): str
   const lines: string[] = []
 
   for (const scene of scenes) {
-    for (const w of scene.words) {
+    for (let i = 0; i < scene.words.length; i++) {
+      const w = scene.words[i]
+      const next = scene.words[i + 1]
+      const start = w.start
+      const end = next ? next.start : scene.end
       const text = escapeAssText(w.text.toUpperCase())
-      const intro = `{\\pos(${x},${yPos})\\an5\\bord10\\3c&H000000&\\c${primary}\\fscx140\\fscy140\\fad(40,40)}`
+      const intro = `{\\pos(${x},${yPos})\\an5\\bord10\\3c&H000000&\\c${primary}\\fscx140\\fscy140\\fad(60,30)}`
       lines.push(
-        `Dialogue: 0,${assTime(w.start)},${assTime(w.end)},Default,,0,0,0,,${intro}${text}`
+        `Dialogue: 0,${assTime(start)},${assTime(end)},Default,,0,0,0,,${intro}${text}`
       )
     }
   }

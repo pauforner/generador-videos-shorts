@@ -12,7 +12,7 @@ export default function Result({
   onRegenerate: () => void
   canRegenerate: boolean
 }) {
-  const fileUrl = `file://${result.videoPath}`
+  const fileUrl = `media:///${encodeURI(result.videoPath)}`
 
   return (
     <div className="h-full flex flex-col">

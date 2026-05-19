@@ -1,7 +1,7 @@
 export default function Footer() {
   return (
     <div className="px-6 py-2 border-t border-border text-[11px] text-muted text-center">
-      Creado por Pau Forner Navarro ·{' '}
+      Creado por Pau Forner para{' '}
       <a
         href="https://metodoinicia.com"
         target="_blank"
@@ -9,6 +9,15 @@ export default function Footer() {
         className="underline hover:text-text"
       >
         metodoinicia.com
+      </a>{' '}
+      y{' '}
+      <a
+        href="https://metadigitales.com"
+        target="_blank"
+        rel="noreferrer"
+        className="underline hover:text-text"
+      >
+        metadigitales.com
       </a>
     </div>
   )

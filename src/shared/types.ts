@@ -32,7 +32,7 @@ export type SubtitleStyleId =
   | 'rolling'
   | 'classic'
 
-export type SubtitlePosition = 'center' | 'lower-third' | 'bottom'
+export type SubtitlePosition = 'center' | 'upper-third' | 'lower-third'
 export type SubtitleSize = 'S' | 'M' | 'L' | 'XL'
 export type SubtitleFont = 'Anton' | 'Inter Black' | 'Montserrat Black'
 
