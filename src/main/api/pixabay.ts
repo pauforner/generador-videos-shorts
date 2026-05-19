@@ -21,12 +21,12 @@ interface PixabayResponse {
   hits: PixabayVideo[]
 }
 
-export async function searchPixabayVideo(
+export async function searchPixabayVideos(
   apiKey: string,
   query: string,
   minDuration: number
-): Promise<BrollMatch | null> {
-  if (!apiKey) return null
+): Promise<BrollMatch[]> {
+  if (!apiKey) return []
 
   const url = new URL('https://pixabay.com/api/videos/')
   url.searchParams.set('key', apiKey)
@@ -38,7 +38,7 @@ export async function searchPixabayVideo(
   if (!res.ok) throw new Error(`Pixabay ${res.status}: ${await res.text()}`)
   const data = (await res.json()) as PixabayResponse
 
-  if (!data.hits || data.hits.length === 0) return null
+  if (!data.hits || data.hits.length === 0) return []
 
   const portrait = data.hits.filter((v) => {
     const variant = v.videos.large ?? v.videos.medium
@@ -47,18 +47,17 @@ export async function searchPixabayVideo(
 
   const pool = portrait.length > 0 ? portrait : data.hits
 
-  const chosen = pool
-    .sort((a, b) => {
-      const aCovers = a.duration >= minDuration ? 0 : 1
-      const bCovers = b.duration >= minDuration ? 0 : 1
-      if (aCovers !== bCovers) return aCovers - bCovers
-      return b.duration - a.duration
-    })[0]
+  const sorted = [...pool].sort((a, b) => {
+    const aCovers = a.duration >= minDuration ? 0 : 1
+    const bCovers = b.duration >= minDuration ? 0 : 1
+    if (aCovers !== bCovers) return aCovers - bCovers
+    return b.duration - a.duration
+  })
 
-  if (!chosen) return null
-
-  const variant = chosen.videos.large ?? chosen.videos.medium ?? chosen.videos.small
-  if (!variant) return null
-
-  return { url: variant.url, duration: chosen.duration, source: 'pixabay' }
+  const matches: BrollMatch[] = []
+  for (const v of sorted) {
+    const variant = v.videos.large ?? v.videos.medium ?? v.videos.small
+    if (variant) matches.push({ url: variant.url, duration: v.duration, source: 'pixabay' })
+  }
+  return matches
 }

@@ -1,6 +1,69 @@
 import { writeFile } from 'fs/promises'
 import type { Word } from '../../shared/types'
 
+export interface ElevenLabsVoice {
+  voice_id: string
+  name: string
+  category: string
+  description: string | null
+  labels: Record<string, string>
+  preview_url: string | null
+}
+
+interface VoicesListResponse {
+  voices: ElevenLabsVoice[]
+}
+
+export async function listVoices(apiKey: string): Promise<ElevenLabsVoice[]> {
+  const res = await fetch('https://api.elevenlabs.io/v1/voices', {
+    headers: { 'xi-api-key': apiKey }
+  })
+  if (!res.ok) throw new Error(`ElevenLabs voices ${res.status}: ${await res.text()}`)
+  const data = (await res.json()) as VoicesListResponse
+  return (data.voices ?? []).map((v) => ({
+    voice_id: v.voice_id,
+    name: v.name,
+    category: v.category ?? 'cloned',
+    description: v.description ?? null,
+    labels: v.labels ?? {},
+    preview_url: v.preview_url ?? null
+  }))
+}
+
+export async function ttsSample(opts: {
+  apiKey: string
+  voiceId: string
+  text: string
+  stability: number
+  similarityBoost: number
+  style: number
+  speed: number
+}): Promise<Buffer> {
+  const url = `https://api.elevenlabs.io/v1/text-to-speech/${opts.voiceId}`
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'xi-api-key': opts.apiKey,
+      'Content-Type': 'application/json',
+      Accept: 'audio/mpeg'
+    },
+    body: JSON.stringify({
+      text: opts.text,
+      model_id: 'eleven_multilingual_v2',
+      voice_settings: {
+        stability: opts.stability,
+        similarity_boost: opts.similarityBoost,
+        style: opts.style,
+        use_speaker_boost: true,
+        speed: opts.speed
+      }
+    })
+  })
+  if (!res.ok) throw new Error(`ElevenLabs TTS ${res.status}: ${await res.text()}`)
+  const arrayBuf = await res.arrayBuffer()
+  return Buffer.from(arrayBuf)
+}
+
 interface AlignmentBlock {
   characters: string[]
   character_start_times_seconds: number[]

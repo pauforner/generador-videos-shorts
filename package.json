@@ -1,10 +1,21 @@
 {
   "name": "generador-videos",
   "version": "0.1.0",
-  "description": "Generador de vídeos verticales 9:16 desde guiones",
+  "description": "Generador de vídeos verticales 9:16 desde guiones, para la comunidad Inicia",
   "main": "out/main/index.js",
-  "author": "Pau Navarro",
-  "license": "UNLICENSED",
+  "author": {
+    "name": "Pau Forner Navarro",
+    "url": "https://metodoinicia.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/pauforner/generador-videos-shorts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pauforner/generador-videos-shorts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pauforner/generador-videos-shorts/issues"
+  },
   "private": true,
   "scripts": {
     "dev": "electron-vite dev",

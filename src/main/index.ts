@@ -2,7 +2,8 @@ import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
 import { join } from 'path'
 import { getConfig, setConfig, isConfigured } from './store'
 import { generateVideo } from './pipeline/orchestrator'
-import type { AppConfig, GenerateRequest } from '../shared/types'
+import { listVoices, ttsSample } from './api/elevenlabs'
+import type { AppConfig, GenerateRequest, VoiceSettings } from '../shared/types'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -73,5 +74,27 @@ function registerIpc(): void {
     return generateVideo(request, (progress) => {
       event.sender.send('video:progress', progress)
     })
+  })
+
+  ipcMain.handle('voices:list', async () => {
+    const { elevenLabsKey } = getConfig()
+    if (!elevenLabsKey) throw new Error('Falta la API key de ElevenLabs')
+    return listVoices(elevenLabsKey)
+  })
+
+  ipcMain.handle('voice:test', async (_e, voice: VoiceSettings) => {
+    const { elevenLabsKey } = getConfig()
+    if (!elevenLabsKey) throw new Error('Falta la API key de ElevenLabs')
+    if (!voice.voiceId) throw new Error('Falta el Voice ID')
+    const audio = await ttsSample({
+      apiKey: elevenLabsKey,
+      voiceId: voice.voiceId,
+      text: 'Hola, esto es una muestra de mi voz con los ajustes actuales.',
+      stability: voice.stability,
+      similarityBoost: voice.similarityBoost,
+      style: voice.style,
+      speed: voice.speed
+    })
+    return `data:audio/mpeg;base64,${audio.toString('base64')}`
   })
 }

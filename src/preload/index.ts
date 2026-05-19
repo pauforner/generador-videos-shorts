@@ -3,7 +3,9 @@ import type {
   AppConfig,
   GenerateRequest,
   GenerateResult,
-  ProgressEvent
+  ProgressEvent,
+  VoiceOption,
+  VoiceSettings
 } from '../shared/types'
 
 const api = {
@@ -18,6 +20,9 @@ const api = {
     ipcRenderer.invoke('shell:showInFolder', path),
   generateVideo: (request: GenerateRequest): Promise<GenerateResult> =>
     ipcRenderer.invoke('video:generate', request),
+  listVoices: (): Promise<VoiceOption[]> => ipcRenderer.invoke('voices:list'),
+  testVoice: (voice: VoiceSettings): Promise<string> =>
+    ipcRenderer.invoke('voice:test', voice),
   onProgress: (cb: (e: ProgressEvent) => void): (() => void) => {
     const listener = (_: unknown, e: ProgressEvent): void => cb(e)
     ipcRenderer.on('video:progress', listener)

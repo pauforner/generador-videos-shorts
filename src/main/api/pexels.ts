@@ -24,11 +24,11 @@ export interface BrollMatch {
   source: 'pexels' | 'pixabay'
 }
 
-export async function searchPexelsVideo(
+export async function searchPexelsVideos(
   apiKey: string,
   query: string,
   minDuration: number
-): Promise<BrollMatch | null> {
+): Promise<BrollMatch[]> {
   const url = new URL('https://api.pexels.com/videos/search')
   url.searchParams.set('query', query)
   url.searchParams.set('orientation', 'portrait')
@@ -41,9 +41,9 @@ export async function searchPexelsVideo(
   if (!res.ok) throw new Error(`Pexels ${res.status}: ${await res.text()}`)
   const data = (await res.json()) as PexelsResponse
 
-  if (!data.videos || data.videos.length === 0) return null
+  if (!data.videos || data.videos.length === 0) return []
 
-  const candidates = data.videos
+  const sorted = [...data.videos]
     .filter((v) => v.height > v.width)
     .sort((a, b) => {
       const aCovers = a.duration >= minDuration ? 0 : 1
@@ -52,14 +52,13 @@ export async function searchPexelsVideo(
       return b.duration - a.duration
     })
 
-  const chosen = candidates[0] ?? data.videos[0]
-  if (!chosen) return null
-
-  const file =
-    chosen.video_files.find((f) => f.quality === 'hd' && f.height >= 1280) ??
-    chosen.video_files.find((f) => f.quality === 'hd') ??
-    chosen.video_files[0]
-  if (!file) return null
-
-  return { url: file.link, duration: chosen.duration, source: 'pexels' }
+  const matches: BrollMatch[] = []
+  for (const v of sorted) {
+    const file =
+      v.video_files.find((f) => f.quality === 'hd' && f.height >= 1280) ??
+      v.video_files.find((f) => f.quality === 'hd') ??
+      v.video_files[0]
+    if (file) matches.push({ url: file.link, duration: v.duration, source: 'pexels' })
+  }
+  return matches
 }

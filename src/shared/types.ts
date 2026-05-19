@@ -45,11 +45,17 @@ export interface SubtitleSettings {
   position: SubtitlePosition
 }
 
+export interface ClipLengthSettings {
+  minSec: number
+  maxSec: number
+}
+
 export interface GenerateRequest {
   script: string
   voice: VoiceSettings
   music: MusicSettings
   subtitles: SubtitleSettings
+  clipLength: ClipLengthSettings
 }
 
 export interface Word {
@@ -87,4 +93,13 @@ export interface ProgressEvent {
 export interface GenerateResult {
   videoPath: string
   durationSeconds: number
+}
+
+export interface VoiceOption {
+  voice_id: string
+  name: string
+  category: string
+  description: string | null
+  labels: Record<string, string>
+  preview_url: string | null
 }

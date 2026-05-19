@@ -4,6 +4,7 @@ import { app } from 'electron'
 import { analyzeScript } from '../api/llm'
 import { ttsWithTimestamps } from '../api/elevenlabs'
 import { alignScenes } from './align-scenes'
+import { applyClipLength } from './split-merge'
 import { fetchBrolls } from './fetch-broll'
 import { composeVideo } from './compose'
 import { burnSubtitles } from './burn-subs'
@@ -46,8 +47,9 @@ export async function generateVideo(
     })
 
     onProgress({ phase: 'aligning', message: 'Alineando escenas con audio…', percent: 35 })
-    const scenes = alignScenes(analyzed, tts.words)
-    if (scenes.length === 0) throw new Error('No se pudieron alinear escenas con timestamps')
+    const aligned = alignScenes(analyzed, tts.words)
+    if (aligned.length === 0) throw new Error('No se pudieron alinear escenas con timestamps')
+    const scenes = applyClipLength(aligned, request.clipLength)
 
     onProgress({ phase: 'fetching', message: 'Descargando b-rolls…', percent: 40 })
     const scenesWithClips = await fetchBrolls({

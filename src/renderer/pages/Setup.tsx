@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Header from '../components/Header'
 import type { AppConfig, LLMProvider } from '../../shared/types'
 
 export default function Setup({ onDone }: { onDone: () => void }) {
@@ -42,14 +43,13 @@ export default function Setup({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <div className="h-full overflow-y-auto px-8 py-10">
+    <div className="h-full flex flex-col">
+      <Header title="Configuración inicial" />
+      <div className="flex-1 overflow-y-auto px-8 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
-        <header>
-          <h1 className="text-2xl font-bold">Configuración inicial</h1>
-          <p className="text-muted text-sm mt-1">
-            Pega tus API keys. Se guardan cifradas en este equipo. No salen de aquí.
-          </p>
-        </header>
+        <p className="text-muted text-sm">
+          Pega tus API keys. Se guardan cifradas en este equipo. No salen de aquí.
+        </p>
 
         <section className="card space-y-4">
           <h2 className="text-base font-semibold">APIs obligatorias</h2>
@@ -148,6 +148,7 @@ export default function Setup({ onDone }: { onDone: () => void }) {
             {saving ? 'Guardando…' : 'Guardar y continuar'}
           </button>
         </div>
+      </div>
       </div>
     </div>
   )

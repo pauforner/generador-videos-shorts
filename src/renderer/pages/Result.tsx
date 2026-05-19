@@ -1,19 +1,22 @@
+import Header from '../components/Header'
 import type { GenerateResult } from '../../shared/types'
 
 export default function Result({
   result,
-  onNew
+  onNew,
+  onRegenerate,
+  canRegenerate
 }: {
   result: GenerateResult
   onNew: () => void
+  onRegenerate: () => void
+  canRegenerate: boolean
 }) {
   const fileUrl = `file://${result.videoPath}`
 
   return (
     <div className="h-full flex flex-col">
-      <header className="px-6 py-4 border-b border-border">
-        <h1 className="text-lg font-semibold">Vídeo generado</h1>
-      </header>
+      <Header title="Vídeo generado" />
       <div className="flex-1 overflow-y-auto p-6 flex items-center justify-center gap-8">
         <video
           src={fileUrl}
@@ -46,8 +49,13 @@ export default function Result({
           >
             Abrir vídeo
           </button>
+          {canRegenerate && (
+            <button className="btn-ghost w-full" onClick={onRegenerate}>
+              Volver al editor con estos ajustes
+            </button>
+          )}
           <button className="btn-ghost w-full" onClick={onNew}>
-            Nuevo vídeo
+            Nuevo vídeo desde cero
           </button>
         </div>
       </div>

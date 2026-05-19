@@ -1,16 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import Header from '../components/Header'
+import SubtitlePreview from '../components/SubtitlePreview'
 import type {
+  ClipLengthSettings,
   GenerateRequest,
   GenerateResult,
   MusicSettings,
   ProgressEvent,
   SubtitleSettings,
   SubtitleStyleId,
+  VoiceOption,
   VoiceSettings
 } from '../../shared/types'
-import SubtitlePreview from '../components/SubtitlePreview'
 
-type Tab = 'script' | 'voice' | 'music' | 'subs'
+type Tab = 'script' | 'voice' | 'music' | 'subs' | 'edit'
 
 const STYLES: { id: SubtitleStyleId; label: string; desc: string }[] = [
   { id: 'hormozi', label: 'Hormozi', desc: '1-2 palabras MAYÚSCULAS con pop de color' },
@@ -20,39 +23,76 @@ const STYLES: { id: SubtitleStyleId; label: string; desc: string }[] = [
   { id: 'classic', label: 'Clásico', desc: 'Frases completas tipo Netflix' }
 ]
 
+const DEFAULT_VOICE: VoiceSettings = {
+  voiceId: '',
+  stability: 0.5,
+  similarityBoost: 0.75,
+  style: 0.0,
+  speed: 1.0,
+  volumeDb: 0
+}
+
+const DEFAULT_MUSIC: MusicSettings = {
+  mp3Path: null,
+  volumeDb: -20,
+  ducking: true
+}
+
+const DEFAULT_SUBS: SubtitleSettings = {
+  styleId: 'hormozi',
+  primaryColor: '#FFFFFF',
+  highlightColor: '#FACC15',
+  font: 'Anton',
+  size: 'L',
+  position: 'center'
+}
+
+const DEFAULT_CLIP: ClipLengthSettings = {
+  minSec: 2.5,
+  maxSec: 5
+}
+
 export default function NewVideo({
+  initialRequest,
   onGenerated,
   onOpenSetup
 }: {
-  onGenerated: (r: GenerateResult) => void
+  initialRequest: GenerateRequest | null
+  onGenerated: (req: GenerateRequest, res: GenerateResult) => void
   onOpenSetup: () => void
 }) {
   const [tab, setTab] = useState<Tab>('script')
-  const [script, setScript] = useState('')
-  const [voice, setVoice] = useState<VoiceSettings>({
-    voiceId: '',
-    stability: 0.5,
-    similarityBoost: 0.75,
-    style: 0.0,
-    speed: 1.0,
-    volumeDb: 0
-  })
-  const [music, setMusic] = useState<MusicSettings>({
-    mp3Path: null,
-    volumeDb: -20,
-    ducking: true
-  })
-  const [subs, setSubs] = useState<SubtitleSettings>({
-    styleId: 'hormozi',
-    primaryColor: '#FFFFFF',
-    highlightColor: '#FACC15',
-    font: 'Anton',
-    size: 'L',
-    position: 'center'
-  })
+  const [script, setScript] = useState(initialRequest?.script ?? '')
+  const [voice, setVoice] = useState<VoiceSettings>(initialRequest?.voice ?? DEFAULT_VOICE)
+  const [music, setMusic] = useState<MusicSettings>(initialRequest?.music ?? DEFAULT_MUSIC)
+  const [subs, setSubs] = useState<SubtitleSettings>(initialRequest?.subtitles ?? DEFAULT_SUBS)
+  const [clip, setClip] = useState<ClipLengthSettings>(
+    initialRequest?.clipLength ?? DEFAULT_CLIP
+  )
   const [generating, setGenerating] = useState(false)
   const [progress, setProgress] = useState<ProgressEvent | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [voices, setVoices] = useState<VoiceOption[] | null>(null)
+  const [loadingVoices, setLoadingVoices] = useState(false)
+  const [voiceMode, setVoiceMode] = useState<'list' | 'manual'>(
+    initialRequest?.voice.voiceId ? 'manual' : 'list'
+  )
+  const [testing, setTesting] = useState(false)
+  const [testAudio, setTestAudio] = useState<string | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  useEffect(() => {
+    if (tab !== 'voice' || voices !== null || loadingVoices) return
+    setLoadingVoices(true)
+    window.api
+      .listVoices()
+      .then((vs) => setVoices(vs))
+      .catch(() => {
+        setVoices([])
+        setVoiceMode('manual')
+      })
+      .finally(() => setLoadingVoices(false))
+  }, [tab, voices, loadingVoices])
 
   const generate = async (): Promise<void> => {
     if (!script.trim()) {
@@ -63,6 +103,10 @@ export default function NewVideo({
       setError('Falta el Voice ID de ElevenLabs.')
       return
     }
+    if (clip.minSec >= clip.maxSec) {
+      setError('La duración mínima debe ser menor que la máxima.')
+      return
+    }
     setError(null)
     setGenerating(true)
     setProgress({ phase: 'analyzing', message: 'Iniciando…', percent: 0 })
@@ -70,14 +114,38 @@ export default function NewVideo({
     const unsubscribe = window.api.onProgress(setProgress)
 
     try {
-      const request: GenerateRequest = { script, voice, music, subtitles: subs }
+      const request: GenerateRequest = {
+        script,
+        voice,
+        music,
+        subtitles: subs,
+        clipLength: clip
+      }
       const result = await window.api.generateVideo(request)
-      onGenerated(result)
+      onGenerated(request, result)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido')
     } finally {
       unsubscribe()
       setGenerating(false)
+    }
+  }
+
+  const testVoice = async (): Promise<void> => {
+    if (!voice.voiceId.trim()) {
+      setError('Selecciona o pega un Voice ID antes de probar.')
+      return
+    }
+    setError(null)
+    setTesting(true)
+    try {
+      const url = await window.api.testVoice(voice)
+      setTestAudio(url)
+      setTimeout(() => audioRef.current?.play(), 100)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error desconocido')
+    } finally {
+      setTesting(false)
     }
   }
 
@@ -88,15 +156,17 @@ export default function NewVideo({
 
   return (
     <div className="h-full flex flex-col">
-      <header className="px-6 py-4 border-b border-border flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Nuevo vídeo</h1>
-        <button className="btn-ghost text-xs" onClick={onOpenSetup}>
-          Ajustes
-        </button>
-      </header>
+      <Header
+        title="Nuevo vídeo"
+        right={
+          <button className="btn-ghost text-xs" onClick={onOpenSetup}>
+            Ajustes
+          </button>
+        }
+      />
 
       <div className="flex border-b border-border">
-        {(['script', 'voice', 'music', 'subs'] as Tab[]).map((t) => (
+        {(['script', 'voice', 'music', 'subs', 'edit'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -110,6 +180,7 @@ export default function NewVideo({
             {t === 'voice' && 'Voz'}
             {t === 'music' && 'Música'}
             {t === 'subs' && 'Subtítulos'}
+            {t === 'edit' && 'Edición'}
           </button>
         ))}
       </div>
@@ -133,15 +204,59 @@ export default function NewVideo({
 
         {tab === 'voice' && (
           <div className="max-w-2xl space-y-4">
-            <div>
-              <label className="label">Voice ID de ElevenLabs</label>
-              <input
-                className="input"
-                value={voice.voiceId}
-                onChange={(e) => setVoice({ ...voice, voiceId: e.target.value })}
-                placeholder="21m00Tcm4TlvDq8ikWAM"
-              />
+            <div className="flex gap-2 text-xs">
+              <button
+                className={`btn ${voiceMode === 'list' ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setVoiceMode('list')}
+              >
+                Mis voces
+              </button>
+              <button
+                className={`btn ${voiceMode === 'manual' ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setVoiceMode('manual')}
+              >
+                Pegar Voice ID
+              </button>
             </div>
+
+            {voiceMode === 'list' && (
+              <div>
+                <label className="label">Voz</label>
+                {loadingVoices ? (
+                  <div className="text-sm text-muted">Cargando voces…</div>
+                ) : voices && voices.length > 0 ? (
+                  <select
+                    className="input"
+                    value={voice.voiceId}
+                    onChange={(e) => setVoice({ ...voice, voiceId: e.target.value })}
+                  >
+                    <option value="">— Selecciona una voz —</option>
+                    {voices.map((v) => (
+                      <option key={v.voice_id} value={v.voice_id}>
+                        {v.name} {v.category ? `(${v.category})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="text-sm text-muted">
+                    No se pudieron cargar las voces. Cambia a "Pegar Voice ID".
+                  </div>
+                )}
+              </div>
+            )}
+
+            {voiceMode === 'manual' && (
+              <div>
+                <label className="label">Voice ID de ElevenLabs</label>
+                <input
+                  className="input"
+                  value={voice.voiceId}
+                  onChange={(e) => setVoice({ ...voice, voiceId: e.target.value })}
+                  placeholder="21m00Tcm4TlvDq8ikWAM"
+                />
+              </div>
+            )}
+
             <Slider
               label="Estabilidad"
               value={voice.stability}
@@ -183,6 +298,19 @@ export default function NewVideo({
               onChange={(v) => setVoice({ ...voice, volumeDb: v })}
               format={(v) => `${v} dB`}
             />
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                className="btn-ghost"
+                disabled={testing || !voice.voiceId}
+                onClick={testVoice}
+              >
+                {testing ? 'Generando muestra…' : 'Probar voz'}
+              </button>
+              {testAudio && (
+                <audio ref={audioRef} src={testAudio} controls className="flex-1" />
+              )}
+            </div>
           </div>
         )}
 
@@ -313,6 +441,36 @@ export default function NewVideo({
               <label className="label">Preview</label>
               <SubtitlePreview settings={subs} />
             </div>
+          </div>
+        )}
+
+        {tab === 'edit' && (
+          <div className="max-w-2xl space-y-5">
+            <div>
+              <h3 className="text-sm font-semibold mb-1">Duración de los b-rolls</h3>
+              <p className="text-xs text-muted">
+                Las escenas largas se dividen en varios clips (cada uno con un b-roll
+                distinto) y las cortas se fusionan. Más cortes = vídeo más dinámico.
+              </p>
+            </div>
+            <Slider
+              label="Duración mínima (s)"
+              value={clip.minSec}
+              min={1.5}
+              max={5}
+              step={0.5}
+              onChange={(v) => setClip({ ...clip, minSec: v })}
+              format={(v) => `${v.toFixed(1)} s`}
+            />
+            <Slider
+              label="Duración máxima (s)"
+              value={clip.maxSec}
+              min={3}
+              max={10}
+              step={0.5}
+              onChange={(v) => setClip({ ...clip, maxSec: v })}
+              format={(v) => `${v.toFixed(1)} s`}
+            />
           </div>
         )}
       </div>
