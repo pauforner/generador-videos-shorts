@@ -84,5 +84,16 @@ export function alignScenes(analyzed: AnalyzedScene[], words: Word[]): Scene[] {
     }
   }
 
+  for (let i = 0; i < scenes.length - 1; i++) {
+    const nextStart = scenes[i + 1].start
+    if (nextStart > scenes[i].end) {
+      scenes[i] = {
+        ...scenes[i],
+        end: nextStart,
+        duration: Math.max(0.5, nextStart - scenes[i].start)
+      }
+    }
+  }
+
   return scenes
 }
